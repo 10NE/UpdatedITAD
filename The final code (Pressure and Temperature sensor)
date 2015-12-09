@@ -1,0 +1,139 @@
+// Flexiforce quick start example
+// Reads A0 every 100ms and sends voltage value over serial
+#include "DHT.h"
+#define pinLed 3
+#define pinBuzzer 2
+#include <LGSM.h>
+#include <Wire.h>
+#include "rgb_lcd.h"
+
+#define DHTPIN 4    // what pin we're connected to
+#define DHTTYPE DHT22   // DHT 22  (AM2302)
+DHT dht(DHTPIN, DHTTYPE);
+
+
+rgb_lcd lcd;
+const int colorR = 255;
+const int colorG = 0;
+const int colorB = 0;
+
+
+void setup() 
+{
+  // Start serial at 9600 baud
+  Serial.begin(9600); 
+  pinMode(pinLed, OUTPUT);
+  pinMode(pinBuzzer, OUTPUT);
+  lcd.begin(16, 2);
+  lcd.setRGB(colorR, colorG, colorB);
+  Serial.println("DHTxx test!");
+  dht.begin();
+
+}
+
+    void loop() 
+{
+
+Your name: Humairah
+Purpose: This is to combine both sensor code to make it work within one LinkIT Board.
+For important functions/method within each file: Nothing is needed to change . Hence, it is what stated in the two separate file .
+
+  
+    
+  // Read the input on analog pin 0:
+  int sensorValue = analogRead(A0);
+  
+  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+  float voltage = sensorValue * (5.0 / 1023.0);
+   
+    float t = 0.0;
+    float h = 0.0;
+   
+    
+    if(dht.readHT(&t, &h))
+    {
+        Serial.println("------------------------------");
+        Serial.print("The current temperature = ");
+        Serial.println(t);
+   
+   if (t < 33.00) {
+    Serial.println("The temperature is low");
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Please heat up");
+        while(!LSMS.ready())
+    {
+        delay(1000);
+    }
+    
+    LSMS.beginSMS("82364302");
+    LSMS.print("Please heat up the food");
+    if(LSMS.endSMS())
+    {
+      Serial.println("Message has been sent");
+    }
+    else
+    {
+      Serial.println("SMS is not sent");
+      lcd.setCursor(0, 0);
+    lcd.print ("Temperature:");
+    lcd.print(t);
+    }
+   }
+   
+{
+    delay(1000);
+}
+}
+  
+  // Print out the value you read:
+  Serial.print("The current pressure is: ");
+  Serial.println(voltage);
+  
+  // Wait 100 milliseconds
+  delay(1000);
+  
+  if (voltage>0.20) {
+    Serial.println("The pressure is high");
+    digitalWrite(pinLed, LOW);
+    
+     while(!LSMS.ready())
+    {
+        delay(1000);
+    }
+   
+    digitalWrite(pinBuzzer, LOW);
+     delay(analogRead(0));  
+     lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print ("Pressure:");
+    lcd.print(voltage);
+   
+  }
+  else {
+    Serial.println("The pressure is low");
+    digitalWrite(pinLed, HIGH);
+    digitalWrite(pinBuzzer, HIGH);
+    delay(analogRead(0));
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Please cook now");
+    
+       
+    LSMS.beginSMS("82364302");
+    LSMS.print("Please top up tray: 1 ");
+    if(LSMS.endSMS())
+    {
+      Serial.println("Please top-up the tray");
+    }
+    else
+    {
+      Serial.println("SMS is not sent");
+    }
+    delay(1000);
+    
+   
+  }
+  
+
+}
