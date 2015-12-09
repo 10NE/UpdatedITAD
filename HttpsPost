@@ -1,0 +1,114 @@
+#include "IotHttpClient.h"
+#include "IotUtils.h"
+
+#include <LWiFi.h>
+#include <string>
+
+#include "DHT.h"
+
+#define DHTPIN 4    // what pin we're connected to
+
+#define DHTTYPE DHT22   // DHT 22  (AM2302)
+
+DHT dht(DHTPIN, DHTTYPE);
+
+// ********************************************
+// ****** START user defined definitions ******
+// ********************************************
+#define WIFI_SSID                       "U papa"
+#define WIFI_PASSWORD                   "lzmlzmlzm"  // make connection to Microsoft Aruze
+// ******************************************
+// ****** END user defined definitions ****** 
+// ******************************************
+// ID of device
+const int device_id = 1; //use device ID to uniquely identify each reading of temperature
+#define DELAY                           60 * 1000
+
+// ******************************************
+// ****** setup()****************************
+// ******************************************
+void setup()
+{
+  Serial.begin(9600);
+  LWiFi.begin();
+
+  Serial.println("DHTxx test!");
+
+  dht.begin();
+  delay(6000);
+  
+  Serial.print("\nSearching for Wifi AP...\n");
+
+  if ( LWiFi.connectWPA(WIFI_SSID, WIFI_PASSWORD) != 1 )
+  {
+    Serial.println("Failed to Connect to Wifi.");
+  }
+  else
+  {
+    Serial.println("Connected to WiFi");
+  }
+  
+}
+
+// ******************************************
+// ****** loop() ****************************
+// ******************************************
+void loop()
+{
+  
+  //else
+  //{
+    
+
+    float t = 0.0;
+    float h = 0.0;
+
+    if (dht.readHT(&t, &h))
+    {
+      Serial.println("------------------------------");
+      Serial.print("temperature = ");
+      Serial.println(t);
+        if (t < 25)
+        {
+          Serial.println("Temperature is low");
+          Serial.println("Please heat up the food");
+        }
+        else
+        {
+          Serial.println(" ");
+        }
+
+      // Generate some random data to send to Azure cloud.
+      srand(vm_ust_get_current_time());
+
+      
+      int temperature = t;
+   
+      
+
+      // Construct a JSON data string using the random data.
+      std::string json_iot_data;
+      // Send the JSON data to the Azure cloud and get the HTTP status code.
+        json_iot_data += "{ \"DeviceId\":" + IotUtils::IntToString(device_id);
+        json_iot_data += ", \"Temperature\":" + IotUtils::IntToString(t);
+        json_iot_data += " }"; //jason code to show data in excel table
+
+     //  json_iot_data += " }";
+
+     
+      IotHttpClient     https_client;
+
+      int http_code = https_client.SendAzureHttpsData(json_iot_data);
+
+      Serial.println(String(http_code));
+    }
+  //}
+
+  //LWiFi.disconnect();
+
+  // Sleeps for a while...
+  delay(DELAY);
+}
+) Your source code-Source code is to be documented with  
+(A) Lu Fu Xin
+(B) Purpose: send data to excel from Microsoft Aruze
